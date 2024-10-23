@@ -17,7 +17,7 @@ function PlayerAnimeCard({ data, id }) {
     if (id === 'Recommendations') {
       setVisibleItems(15)
     }
-  }, [data])
+  }, [id, data])
 
   const handleShowMore = () => {
     setVisibleItems(data.length);

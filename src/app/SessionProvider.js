@@ -5,10 +5,9 @@ import { AppProgressBar as ProgressBar } from "next-nprogress-bar";
 import "react-loading-skeleton/dist/skeleton.css";
 import { SkeletonTheme } from "react-loading-skeleton";
 import { toast } from 'sonner';
-
+const NextAuthSessionProvider = SessionProvider;
 
 export function AuthProvider({ children, session }) {
-
     React.useEffect(() => {
         // Only run this effect in the browser
         if (typeof window !== 'undefined') {
@@ -25,7 +24,7 @@ export function AuthProvider({ children, session }) {
     }, [session]);
 
     return (
-        <SessionProvider session={session}>
+        <NextAuthSessionProvider session={session}>
             <SkeletonTheme baseColor="#18181b" highlightColor="#1e1e24" borderRadius={"0.5rem"}>
                 {children}
             </SkeletonTheme>
@@ -35,6 +34,6 @@ export function AuthProvider({ children, session }) {
                 options={{ showSpinner: true }}
             // shallowRouting // by enabling this progressbar does not show on query params change
             />
-        </SessionProvider>
+        </NextAuthSessionProvider>
     );
 }

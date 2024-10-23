@@ -1,5 +1,30 @@
 "use server"
-import { redis } from "@/lib/rediscache";
+import { ANIME } from "@consumet/extensions";
+import { AnimeInfoAnilist } from '@/lib/Anilistfunctions'
+import { findSimilarTitles } from '@/lib/stringSimilarity'
+
+const gogo = new ANIME.Gogoanime();
+const hianime = new ANIME.Zoro();
+
+export async function getMappings(anilistId) {
+    const data = await getInfo(anilistId);
+    let gogores, zorores;
+    if (!data) {
+        return null;
+    }
+    gogores = await mapGogo(data?.title);
+    zorores = await mapZoro(data?.title);
+    return { gogoanime: gogores, zoro: zorores, id: data?.id, malId: data?.idMal, title: data?.title.romaji };
+}
+
+async function getInfo(id) {
+    try {
+        const data = await AnimeInfoAnilist(id);
+        return data;
+    } catch (error) {
+        console.error("Error fetching info: ", error);
+    }
+}
 
 export async function getRecentEpisodes() {
     try {
@@ -33,28 +58,10 @@ export async function getRecentEpisodes() {
 }
 
 export const GET = async (req) => {
-    let cached;
-    if (redis) {
-        console.log('using redis')
-        cached = await redis.get('recent');
-    }
-    if (cached) {
-        return JSON.parse(cached);
-    }
-    else {
-        const data = await fetchRecent();
-        if (data && data?.length > 0) {
-            if (redis) {
-                await redis.set(
-                    "recent",
-                    JSON.stringify(data),
-                    "EX",
-                    60 * 60
-                );
-            }
-            return data;
-        } else {
-            return { message: "Recent Episodes not found" };
-        }
+    const data = await getRecentEpisodes();
+    if (data && data.length > 0) {
+        return data;
+    } else {
+        return { message: "Recent Episodes not found" };
     }
 };

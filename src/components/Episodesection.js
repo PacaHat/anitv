@@ -66,7 +66,7 @@ function Episodesection({ data, id, progress, setUrl }) {
     if (data?.type !== 'MANGA' && data?.status !== 'NOT_YET_RELEASED') {
       fetchepisodes();
     }
-  }, [data?.id])
+  }, [data?.id, data?.status, data?.type, defaultProvider, id])
 
   const handleProviderChange = (event) => {
     setdefaultProvider(event.target.value);
@@ -80,7 +80,7 @@ function Episodesection({ data, id, progress, setUrl }) {
         ? provider?.episodes?.slice(0, dubcount)  : provider?.episodes;
   
     setCurrentEpisodes(filteredEp ?? []);
-  }, [subtype, episodeData, defaultProvider]);
+  }, [subtype,dubcount, episodeData, defaultProvider]);
 
   const totalEpisodes = currentEpisodes?.length || 0;
 
@@ -141,7 +141,7 @@ function Episodesection({ data, id, progress, setUrl }) {
         setUrl(null);
       }
     }
-  }, [currentEpisodes, progress, defaultProvider]);
+  }, [currentEpisodes, progress, defaultProvider, data?.id, data?.nextAiringEpisode, setUrl, subtype]);
 
   return (
     <div className={styles.episodesection}>

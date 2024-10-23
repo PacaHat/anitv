@@ -9,49 +9,27 @@ import VerticalList from '@/components/home/VerticalList'
 import ContinueWatching from '@/components/home/ContinueWatching'
 import RecentEpisodes from '@/components/home/RecentEpisodes'
 import { getAuthSession } from './api/auth/[...nextauth]/route'
-import { redis } from '@/lib/rediscache'
+import { getWatchHistory } from '@/lib/EpHistoryfunctions'
 // import { getWatchHistory } from '@/lib/EpHistoryfunctions'
 
 async function getHomePage() {
   try {
-    let cachedData;
-    if (redis) {
-      cachedData = await redis.get(`homepage`);
-      if (cachedData) {
-        const parsedData = JSON.parse(cachedData);
-        if (Object.keys(parsedData).length === 0) { // Check if data is an empty object
-          await redis.del(`homepage`);
-          cachedData = null;
-        }
-      }
-    }
-    if (cachedData) {
-      const { herodata, populardata, top100data, seasonaldata } = JSON.parse(cachedData);
-      return { herodata, populardata, top100data, seasonaldata };
-    } else {
-      const [herodata, populardata, top100data, seasonaldata] = await Promise.all([
-        TrendingAnilist(),
-        PopularAnilist(),
-        Top100Anilist(),
-        SeasonalAnilist()
-      ]);
-      const cacheTime = 60 * 60 * 2;
-      if (redis) {
-        await redis.set(`homepage`, JSON.stringify({ herodata, populardata, top100data, seasonaldata }), "EX", cacheTime);
-      }
-      return { herodata, populardata, top100data, seasonaldata };
-    }
+    const [herodata, populardata, top100data, seasonaldata] = await Promise.all([
+      TrendingAnilist(),
+      PopularAnilist(),
+      Top100Anilist(),
+      SeasonalAnilist()
+    ]);
+    return { herodata, populardata, top100data, seasonaldata };
   } catch (error) {
     console.error("Error fetching homepage from anilist: ", error);
-    return null;
+    return { herodata: [], populardata: [], top100data: [], seasonaldata: [] };
   }
 }
 
 async function Home() {
   const session = await getAuthSession();
   const { herodata = [], populardata = [], top100data = [], seasonaldata = [] } = await getHomePage();
-  // const history = await getWatchHistory();
-  // console.log(history)
 
   return (
     <div>

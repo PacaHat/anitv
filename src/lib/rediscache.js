@@ -1,16 +1,18 @@
-import { Redis } from "ioredis";
+let cache = {};
 
-const REDIS_URL = process.env.REDIS_URL;
-let redis;
-
-if (REDIS_URL) {
-  redis = new Redis(REDIS_URL);
-  redis.on("error", (err) => {
-    console.error("Redis error: ", err);
-  });
-
-} else {
-  console.warn("REDIS_URL is not defined. Redis caching will be disabled.");
-}
-
-export { redis };
+export const redis = {
+  get: async (key) => {
+    return cache[key] || null;
+  },
+  set: async (key, value, options) => {
+    cache[key] = value;
+    if (options && options.EX) {
+      setTimeout(() => {
+        delete cache[key];
+      }, options.EX * 1000);
+    }
+  },
+  del: async (key) => {
+    delete cache[key];
+  }
+};

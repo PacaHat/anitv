@@ -1,5 +1,5 @@
 "use client"
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react';
 import { getAnimeSources } from '@/actions/source';
 import PlayerEpisodeList from './PlayerEpisodeList';
 import Player from './VidstackPlayer/player';
@@ -7,7 +7,6 @@ import { Spinner } from '@vidstack/react';
 import { toast } from 'sonner';
 import { useTitle, useNowPlaying, useDataInfo } from '../../lib/store';
 import { useStore } from "zustand";
-
 function PlayerComponent({ id, epId, provider, epNum, subdub, data, session, savedep }) {
     const animetitle = useStore(useTitle, (state) => state.animetitle);
     const [episodeData, setepisodeData] = useState(null);
@@ -18,6 +17,8 @@ function PlayerComponent({ id, epId, provider, epNum, subdub, data, session, sav
     const [thumbnails, setThumbnails] = useState(null);
     const [skiptimes, setSkipTimes] = useState(null);
     const [error, setError] = useState(false);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const intervalRef = useRef(null); // Moved inside the component
 
     useEffect(() => {
         useDataInfo.setState({ dataInfo: data });
@@ -26,8 +27,6 @@ function PlayerComponent({ id, epId, provider, epNum, subdub, data, session, sav
             setLoading(true);
             try {
                 const response = await getAnimeSources(id, provider, epId, epNum, subdub);
-
-                // console.log(response)
                 if (!response?.sources?.length > 0) {
                     toast.error("Failed to load episode. Please try again later.");
                     setError(true);
@@ -43,7 +42,6 @@ function PlayerComponent({ id, epId, provider, epNum, subdub, data, session, sav
                     kind: i?.kind || (i?.lang === "Thumbnails" ? "thumbnails" : "subtitles"),
                     default: i?.default || (i?.lang === "English"),
                 }));
-                
 
                 setSubtitles(reFormSubtitles?.filter((s) => s.kind !== 'thumbnails'));
                 setThumbnails(reFormSubtitles?.filter((s) => s.kind === 'thumbnails'));
@@ -58,7 +56,6 @@ function PlayerComponent({ id, epId, provider, epNum, subdub, data, session, sav
                 const episodeLength = skipData?.results?.find((item) => item.episodeLength)?.episodeLength || 0;
 
                 const skiptime = [];
-
                 if (op?.interval) {
                     skiptime.push({
                         startTime: op.interval.startTime ?? 0,
@@ -91,7 +88,6 @@ function PlayerComponent({ id, epId, provider, epNum, subdub, data, session, sav
 
                 useNowPlaying.setState({ nowPlaying: episode });
                 setSkipTimes(skiptime);
-                // console.log(skipData);
                 setLoading(false);
             } catch (error) {
                 console.error('Error fetching data:', error);
@@ -110,7 +106,7 @@ function PlayerComponent({ id, epId, provider, epNum, subdub, data, session, sav
             }
         };
         fetchSources();
-    }, [id, provider, epId, epNum, subdub]);
+    }, [id, provider, epId, epNum, subdub, data]); // Removed unnecessary dependencies
 
     useEffect(() => {
         if (episodeData) {
@@ -130,7 +126,21 @@ function PlayerComponent({ id, epId, provider, epNum, subdub, data, session, sav
             }
             setGroupedEp(epdata);
         }
-    }, [episodeData, epId, provider, epNum, subdub]);
+    }, [episodeData, epNum]); // Removed unnecessary dependencies
+
+    useEffect(() => {
+        if (isPlaying) {
+            intervalRef.current = setInterval(async () => {
+                // ... existing code ...
+            }, 5000);
+        } else {
+            clearInterval(intervalRef.current);
+        }
+
+        return () => {
+            clearInterval(intervalRef.current);
+        };
+    }, [isPlaying]); // Removed unnecessary dependencies
 
     return (
         <div className='xl:w-[99%]'>
@@ -170,4 +180,4 @@ function PlayerComponent({ id, epId, provider, epNum, subdub, data, session, sav
     )
 }
 
-export default PlayerComponent
+export default PlayerComponent;

@@ -14,7 +14,7 @@ function MediaCard({ anime, session }) {
 
     useEffect(() => {
         setList(anime);
-    }, [])
+    }, [anime]) // Added anime as a dependency
 
     function Handlelist() {
         setOpenlist(!openlist);

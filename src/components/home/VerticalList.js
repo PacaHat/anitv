@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import styles from '../../styles/VerticalList.module.css';
 import Link from 'next/link';
-// import Image from 'next/image';
+import Image from 'next/image';
 import { useTitle } from '@/lib/store';
 import { useStore } from 'zustand';
 
@@ -70,11 +70,7 @@ const VerticalList = ({ data, id, mobiledata }) => {
           </div>
           <div className={styles.vcardcontent}>
             <div className={styles.vcardleft}>
-              <img
-                src={anime?.coverImage?.large}
-                alt=""
-                className={styles.vcardimg}
-              />
+              <Image src={anime?.coverImage?.large} alt="" width={500} height={300} className={styles.vcardimg} />
               <div className={styles.vcardinfo}>
                 <div className={styles.linktitle}>
                   <Link

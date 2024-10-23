@@ -39,7 +39,7 @@ function Player({ dataInfo, id, groupedEp, src, session, savedep, subtitles, thu
   const [edbutton, setedbutton] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progressSaved, setprogressSaved] = useState(false);
-  let interval;
+  const intervalRef = useRef(null); // Use useRef to store the interval ID
 
   useEffect(() => {
     playerRef.current?.subscribe(({ currentTime, duration }) => {
@@ -70,7 +70,71 @@ function Player({ dataInfo, id, groupedEp, src, session, savedep, subtitles, thu
       }
     })
 
-  }, [settings]);
+  }, [settings, skiptimes]);
+
+  useEffect(() => {
+    if (isPlaying) {
+      intervalRef.current = setInterval(async () => {
+        const currentTime = playerRef.current?.currentTime
+          ? Math.round(playerRef.current?.currentTime)
+          : 0;
+
+        await updateEp({
+          userName: session?.user?.name,
+          aniId: String(dataInfo?.id) || String(id),
+          aniTitle: dataInfo?.title?.[animetitle] || dataInfo?.title?.romaji,
+          epTitle: currentep?.title || `EP ${epNum}`,
+          image: currentep?.img || currentep?.image ||
+            dataInfo?.bannerImage || dataInfo?.coverImage?.extraLarge || '',
+          epId: epId,
+          epNum: Number(epNum) || Number(currentep?.number),
+          timeWatched: currentTime,
+          duration: duration,
+          provider: provider,
+          nextepId: nextep?.id || null,
+          nextepNum: nextep?.number || null,
+          subtype: subtype
+        });
+
+        UpdateVideoProgress(dataInfo?.id || id, {
+          aniId: String(dataInfo?.id) || String(id),
+          aniTitle: dataInfo?.title?.[animetitle] || dataInfo?.title?.romaji,
+          epTitle: currentep?.title || `EP ${epNum}`,
+          image: currentep?.img || currentep?.image ||
+            dataInfo?.bannerImage || dataInfo?.coverImage?.extraLarge || '',
+          epId: epId,
+          epNum: Number(epNum) || Number(currentep?.number),
+          timeWatched: currentTime,
+          duration: duration,
+          provider: provider,
+          nextepId: nextep?.id || nextep?.episodeId || null,
+          nextepNum: nextep?.number || null,
+          subtype: subtype,
+          createdAt: new Date().toISOString(),
+        });
+      }, 5000);
+    } else {
+      clearInterval(intervalRef.current);
+    }
+
+    return () => {
+      clearInterval(intervalRef.current);
+    };
+  }, [
+    isPlaying,
+    duration,
+    UpdateVideoProgress,
+    animetitle,
+    currentep,
+    dataInfo,
+    epId,
+    epNum,
+    id,
+    nextep,
+    provider,
+    session?.user?.name,
+    subtype
+  ]);
 
   function onCanPlay() {
     if (skiptimes && skiptimes.length > 0) {
@@ -111,56 +175,6 @@ function Player({ dataInfo, id, groupedEp, src, session, savedep, subtitles, thu
     // console.log("pause")
     setIsPlaying(false);
   }
-
-  useEffect(() => {
-    if (isPlaying) {
-      interval = setInterval(async () => {
-        const currentTime = playerRef.current?.currentTime
-          ? Math.round(playerRef.current?.currentTime)
-          : 0;
-
-        await updateEp({
-          userName: session?.user?.name,
-          aniId: String(dataInfo?.id) || String(id),
-          aniTitle: dataInfo?.title?.[animetitle] || dataInfo?.title?.romaji,
-          epTitle: currentep?.title || `EP ${epNum}`,
-          image: currentep?.img || currentep?.image ||
-            dataInfo?.bannerImage || dataInfo?.coverImage?.extraLarge || '',
-          epId: epId,
-          epNum: Number(epNum) || Number(currentep?.number),
-          timeWatched: currentTime,
-          duration: duration,
-          provider: provider,
-          nextepId: nextep?.id || null,
-          nextepNum: nextep?.number || null,
-          subtype: subtype
-        })
-
-        UpdateVideoProgress(dataInfo?.id || id, {
-          aniId: String(dataInfo?.id) || String(id),
-          aniTitle: dataInfo?.title?.[animetitle] || dataInfo?.title?.romaji,
-          epTitle: currentep?.title || `EP ${epNum}`,
-          image: currentep?.img || currentep?.image ||
-            dataInfo?.bannerImage || dataInfo?.coverImage?.extraLarge || '',
-          epId: epId,
-          epNum: Number(epNum) || Number(currentep?.number),
-          timeWatched: currentTime,
-          duration: duration,
-          provider: provider,
-          nextepId: nextep?.id || nextep?.episodeId || null,
-          nextepNum: nextep?.number || null,
-          subtype: subtype,
-          createdAt: new Date().toISOString(),
-        });
-      }, 5000);
-    } else {
-      clearInterval(interval);
-    }
-
-    return () => {
-      clearInterval(interval);
-    };
-  }, [isPlaying, duration]);
 
   function onLoadedMetadata() {
     if (savedep && savedep[0]) {

@@ -10,6 +10,7 @@ import VideoProgressSave from '@/utils/VideoProgressSave';
 function VidstackPlayer({ data, sources, skiptimes, epid, thumbnails, subtitles, getNextEpisode, currentep, provider, subtype, epnum, settings }) {
     const [getVideoProgress, UpdateVideoProgress] = VideoProgressSave();
     const playerRef = useRef(null);
+    const intervalRef = useRef(null); // Added useRef for interval
     const { duration } = useMediaStore(playerRef);
     const remote = useMediaRemote(playerRef);
     const defaultQuality = 'default';
@@ -22,7 +23,6 @@ function VidstackPlayer({ data, sources, skiptimes, epid, thumbnails, subtitles,
     const [edbutton, setedbutton] = useState(false);
     const [autoSkip, setAutoSkip] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false);
-    let interval;
     let autoNext = true
 
     useEffect(() => {
@@ -35,21 +35,7 @@ function VidstackPlayer({ data, sources, skiptimes, epid, thumbnails, subtitles,
     }, []);
 
     useEffect(() => {
-        // if (subtitles && subtitles.length > 0) {
-        //     const track = new TextTrack({
-        //         kind: 'subtitles',
-        //         default: true,
-        //         label: 'English',
-        //         language: 'en-US',
-        //         type: 'vtt',
-        //         src: subtitles[0]?.url || ''
-        //     });
-
-        //     playerRef.current.textTracks.add(track);
-        // }
-
         playerRef.current?.subscribe(({ currentTime, duration }) => {
-
             if (skiptimes && skiptimes.length > 0) {
                 const opStart = skiptimes[0]?.startTime ?? 0;
                 const opEnd = skiptimes[0]?.endTime ?? 0;
@@ -75,11 +61,15 @@ function VidstackPlayer({ data, sources, skiptimes, epid, thumbnails, subtitles,
                         return null;
                     }
                 }
+
+                // Example usage of 'duration'
+                if (duration > 0) {
+                    const watchedPercentage = (currentTime / duration) * 100;
+                    console.log(`Watched: ${watchedPercentage.toFixed(2)}%`);
+                }
             }
-
-        })
-
-    }, []);
+        });
+    }, [autoSkip, skiptimes]); // Add dependencies here
 
     function onCanPlay() {
         if (skiptimes && skiptimes.length > 0) {
@@ -101,7 +91,6 @@ function VidstackPlayer({ data, sources, skiptimes, epid, thumbnails, subtitles,
         if (autoNext) {
             getNextEpisode();
         }
-        // console.log("End")
         setIsPlaying(false);
     }
 
@@ -112,18 +101,16 @@ function VidstackPlayer({ data, sources, skiptimes, epid, thumbnails, subtitles,
     }
 
     function onPlay() {
-        // console.log("play")
         setIsPlaying(true);
     }
 
     function onPause() {
-        // console.log("pause")
         setIsPlaying(false);
     }
 
     useEffect(() => {
         if (isPlaying) {
-            interval = setInterval(async () => {
+            intervalRef.current = setInterval(async () => {
                 const currentTime = playerRef.current?.currentTime
                     ? Math.round(playerRef.current?.currentTime)
                     : 0;
@@ -142,20 +129,18 @@ function VidstackPlayer({ data, sources, skiptimes, epid, thumbnails, subtitles,
                     duration: duration,
                     timeWatched: currentTime,
                     provider: provider,
-                    //   nextId: navigation?.next?.id,
-                    //   nextNumber: navigation?.next?.number,
                     subtype: subtype,
                     createdAt: new Date().toISOString(),
                 });
             }, 5000);
         } else {
-            clearInterval(interval);
+            clearInterval(intervalRef.current);
         }
 
         return () => {
-            clearInterval(interval);
+            clearInterval(intervalRef.current);
         };
-    }, [isPlaying, duration]);
+    }, [isPlaying, duration, UpdateVideoProgress, currentep, data, epid, epnum, provider, subtype]); // Add dependencies here
 
     function onLoadedMetadata() {
         const seek = getVideoProgress(data?.id);
@@ -198,7 +183,6 @@ function VidstackPlayer({ data, sources, skiptimes, epid, thumbnails, subtitles,
             onPlay={onPlay}
             onPause={onPause}
             onLoadedMetadata={onLoadedMetadata}
-        // onTimeUpdate={onTimeUpdate}
         >
             <div className={styles.bigplaycontainer}>
                 <PlayButton className={styles.vdsbutton}>

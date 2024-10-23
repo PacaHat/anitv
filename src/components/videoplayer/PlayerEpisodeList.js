@@ -77,7 +77,7 @@ function PlayerEpisodeList({ id, data, onprovider, setwatchepdata, epnum }) {
       }
     }
     fetchepisodes();
-  }, [id]);
+  }, [id, data?.status]);
 
   const handleProviderChange = (provider, subvalue = "sub") => {
     setdefaultProvider(provider);
@@ -88,7 +88,7 @@ function PlayerEpisodeList({ id, data, onprovider, setwatchepdata, epnum }) {
   useEffect(() => {
     setdefaultProvider(onprovider);
     setProviderChanged(true);
-  }, [])
+  }, [onprovider]);
 
 
   useEffect(() => {
@@ -103,7 +103,7 @@ function PlayerEpisodeList({ id, data, onprovider, setwatchepdata, epnum }) {
     if (filteredEp) {
       setProviderChanged(false);
     }
-  }, [episodeData, subtype, defaultProvider]);
+  }, [episodeData, subtype, defaultProvider, dubcount, setwatchepdata]);
 
 
   useEffect(() => {
@@ -111,9 +111,7 @@ function PlayerEpisodeList({ id, data, onprovider, setwatchepdata, epnum }) {
       const episodeId = encodeURIComponent(currentEpisodes?.[epnum - 1]?.id || currentEpisodes?.[epnum - 1]?.episodeId);
       router.push(`/anime/watch?id=${id}&host=${defaultProvider}&epid=${episodeId}&ep=${epnum}&type=${subtype}`);
     }
-  //   setTimeout(() => {
-  // }, 0);
-  }, [providerChanged]);
+  }, [providerChanged, currentEpisodes, epnum, id, defaultProvider, router, subtype]);
 
   const refreshEpisodes = async () => {
     setRefreshLoading(true);

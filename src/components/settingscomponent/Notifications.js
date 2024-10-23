@@ -16,26 +16,26 @@ function Notifications({ session }) {
     const [loading, setLoading] = useState(false);
     const [hasNextPage, sethasNextPage] = useState(false);
     const animetitle = useStore(useTitle, (state) => state.animetitle);
-
-    useEffect(() => {
-        const fetchData = async () => {
-            setLoading(true);
-            if (session?.user?.token) {
-                const response = await Usernotifications(session.user.token, page);
-                console.log(response);
-                if (response?.pageInfo) {
-                    sethasNextPage(response?.pageInfo?.hasNextPage)
-                }
-                if (response) {
-                    const filteredNotifications = response?.notifications?.filter(item => Object.keys(item).length > 0);
-                    setNotifications([...notifications, ...filteredNotifications]);
-                }
+// ... existing code ...
+useEffect(() => {
+    const fetchData = async () => {
+        setLoading(true);
+        if (session?.user?.token) {
+            const response = await Usernotifications(session.user.token, page);
+            console.log(response);
+            if (response?.pageInfo) {
+                sethasNextPage(response?.pageInfo?.hasNextPage)
             }
-            setLoading(false);
-        };
-        fetchData();
-    }, [page]);
-
+            if (response) {
+                const filteredNotifications = response?.notifications?.filter(item => Object.keys(item).length > 0);
+                setNotifications([...notifications, ...filteredNotifications]);
+            }
+        }
+        setLoading(false);
+    };
+    fetchData();
+}, [notifications, session.user.token, page]);
+// ... existing code ...
 
 
     if (!session || !session.user) {
