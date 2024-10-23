@@ -84,7 +84,7 @@ export default function Changelogs() {
     }
 
     useEffect(() => {
-        getVersion();
+        // getVersion();
     }, []);
 
     return (
