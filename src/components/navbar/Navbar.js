@@ -288,7 +288,7 @@ function Navbarcomponent({ home = false }) {
                             color="secondary"
                             name={data?.user?.name}
                             size="sm"
-                            src={data?.user?.image?.large || data?.user?.image?.medium || "https://i.pravatar.cc/150?u=a042581f4e29026704d"}
+                            src={data?.user?.image?.large || data?.user?.image?.medium || "https://i.postimg.cc/qqgN3FpL/ezgif-3-e94d17dad2-removebg-preview.png"}
                         />
                     </DropdownTrigger>
                     {isLoggedIn ? (
